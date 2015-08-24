@@ -1,0 +1,52 @@
+/**
+ * @mainpage Alterstack doxygen Main Page.
+ *
+ * @section task_section Task
+ *
+ * Task is code + Stack running on some OS thread. There are Native Task, AlterNative Task and BgRunner
+ * Task.
+ *
+ * Native Task is common code running on it's native stack (code started from main() or
+ * ::std::thread thread function). This code need to be scheduled so thread_local Task instance created.
+ * Native Task always executed in it's native OS thread.
+ *
+ * AlterNative Task is real Task created by Task::Task and executed on alternative Stack by some thread
+ * (main(), some std::thread).
+ *
+ * BgRunner Task is Alternative Task running in BgRunner thread. It is special case, because scheduling
+ * algorithm differ from AlterNative Task (when switching to new Task AlterNative will prefer it's
+ * Native Task and run it if ready, but BgRunner will prefer running queue Task, because it's Native Task
+ * is wait loop).
+ *
+ * ~~~{.cpp}
+ * void ctx()
+ * {
+ *   std::cout << "Context function, first part\n";
+ *   Task::yield();
+ *   std::cout << "Context function, second part\n";
+ * }
+ * int main()
+ * {
+ *   Task task;     // AlterNative Task created
+ *   task.run(ctx); // AlterNative started on main thread and Native Task (for main() code) created
+ *                  // main thread will return to Native at next switch (yield() in ctx)
+ *                  // AlterNative can then be scheduled in BgRunner
+ *                  // AlterNative Task will try to return back to main() as soon as possible but if
+ *                  // not ready (waiting on Awaitable) get Task from running queue.
+ *
+ * }
+ * ~~~
+ *
+ * @section scheduling_section Scheduler
+ *
+ * When Scheduler looking next task to run, it depends on current running task type
+ *
+ * @subsection scheduling_algorithm Scheduling aggorithm
+ *
+ * current task    |next task will from   |if no next task
+ * ----------------|----------------------|---------------
+ * Native Task     | running queue        |wait on conditional_variable
+ * AlterNative Task| Native, running queue|switch to Native and wait there
+ * BgRunner (when running) | running queue|switch to Native (wait loop)
+
+ */
