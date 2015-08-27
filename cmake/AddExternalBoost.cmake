@@ -1,7 +1,7 @@
 if(CMAKE_SYSTEM_NAME MATCHES "Windows")
     set(EXT_BOOST_DOWNLOAD_URL "http://sourceforge.net/projects/boost/files/boost/1.59.0/boost_1_59_0.zip")
 else()
-    set(EXT_BOOST_DOWNLOAD_URL "http://sourceforge.net/projects/boost/files/boost/1.59.0/boost_1_59_0.tar.bz2")
+    set(EXT_BOOST_DOWNLOAD_URL "http://sourceforge.net/projects/boost/files/boost/1.58.0/boost_1_58_0.tar.bz2")
 endif()
 #Bootstrap
 #if((CMAKE_SYSTEM_NAME MATCHES "Windows") AND (NOT CMAKE_CROSSCOMPILING))
@@ -21,7 +21,7 @@ ExternalProject_Add(EXT_BOOST
   BUILD_COMMAND ""
   INSTALL_COMMAND ./b2 install
 )
-ExternalProject_Get_Property(EXT_BOOST INSTALL_DIR)
-set(BOOST_ROOT "${INSTALL_DIR}/installed")
+#ExternalProject_Get_Property(EXT_BOOST INSTALL_DIR)
+set(BOOST_ROOT "${CMAKE_BINARY_DIR}/InstalledExternals")
 
-find_package(Boost 1.58.0 COMPONENTS context)
+#find_package(Boost 1.58.0 COMPONENTS context)
