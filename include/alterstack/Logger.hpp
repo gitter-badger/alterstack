@@ -21,10 +21,12 @@
 
 #include "alterstack/Scheduler.hpp"
 
-#include <iostream>
+#include <CrashLog.hpp>
 
 #include <unistd.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 
-#define LOG ::std::cout << "  tid,task:" << ::syscall(SYS_gettid) << "," << Scheduler::get_current_task() << "  "
+//#define LOG ::std::cout << "  tid,task:" << ::syscall(SYS_gettid) << "," << Scheduler::get_current_task() << "  "
+
+#define LOG TRACE_LOG << "  tid,task:" << ::syscall(SYS_gettid) << "," << Scheduler::get_current_task() << "  "
