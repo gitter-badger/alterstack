@@ -29,4 +29,5 @@
 
 //#define LOG ::std::cout << "  tid,task:" << ::syscall(SYS_gettid) << "," << Scheduler::get_current_task() << "  "
 
-#define LOG TRACE_LOG << "  tid,task:" << ::syscall(SYS_gettid) << "," << Scheduler::get_current_task() << "  "
+#define LOG_TASK_INFO "  tid,task:" << ::syscall(SYS_gettid) << "," << Scheduler::get_current_task() << "  "
+#define LOG TRACE_LOG << LOG_TASK_INFO
