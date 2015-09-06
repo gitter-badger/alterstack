@@ -29,5 +29,27 @@
 
 //#define LOG ::std::cout << "  tid,task:" << ::syscall(SYS_gettid) << "," << Scheduler::get_current_task() << "  "
 
+#ifdef DISABLE_LOG
+class EmptyLog
+{
+public:
+    template<typename T>
+    EmptyLog& operator <<( T )
+    { return *this; }
+};
+#endif
+
+inline LogStream& trace_log()
+{
+    static LogStream file_plog("trace.log");
+    return file_plog;
+}
+
+#ifndef DISABLE_TRACE_LOG
+    #define TRACE_LOG trace_log()
+#else
+    #define TRACE_LOG EmptyLog()
+#endif
+
 #define LOG_TASK_INFO "  tid,task:" << ::syscall(SYS_gettid) << "," << Scheduler::get_current_task() << "  "
 #define LOG TRACE_LOG << LOG_TASK_INFO
