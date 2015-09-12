@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8)
 #OPTION(ENABLE_OPTIMIZATION      "Enable optimization [default: OFF]"             ON)
 
 include(ExternalProject)
-#link_directories(${CMAKE_BINARY_DIR}/InstalledExternals/lib)
+link_directories(${CMAKE_BINARY_DIR}/InstalledExternals/lib)
 include_directories(${CMAKE_BINARY_DIR}/InstalledExternals/include)
 
 #if (NOT CMAKE_BUILD_TYPE)
