@@ -16,12 +16,12 @@
  *  as representing official policies, either expressed or implied, of Dmitry Vyukov.
  */ 
 
-#include "stdafx.h"
+//#include "stdafx.h"
 
 #include <stdio.h>
 #include <time.h>
 #include <intrin.h>
-#include <windows.h>
+//#include <windows.h>
 #include <process.h>
 #include <iostream>
 #include <string>
