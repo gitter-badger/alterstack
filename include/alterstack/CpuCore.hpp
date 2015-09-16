@@ -28,19 +28,19 @@ class BgRunner;
 /**
  * @brief Single Task background runner thread.
  */
-class BgrThread
+class CpuCore
 {
 public:
-    BgrThread() = delete;
+    CpuCore() = delete;
     /**
      * @brief start one OS thread
      * @param bg_runner reference to BgRunner
      */
-    BgrThread(BgRunner& bg_runner);
+    CpuCore(BgRunner& bg_runner);
     /**
      * @brief destructor stops OS thread, return when it's stopped
      */
-    ~BgrThread();
+    ~CpuCore();
 
 private:
     void thread_function();

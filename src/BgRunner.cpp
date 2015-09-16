@@ -33,7 +33,7 @@ BgRunner::BgRunner(uint32_t running)
     LOG << "BgRunner::BgRunner()\n";
     for(uint32_t i = 0; i < running; ++i)
     {
-        m_thread.push_back(::std::make_unique<BgrThread>(*this));
+        m_thread.push_back(::std::make_unique<CpuCore>(*this));
     }
 }
 

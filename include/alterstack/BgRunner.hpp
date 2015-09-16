@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "BgrThread.hpp"
+#include "CpuCore.hpp"
 
 #include <atomic>
 #include <deque>
@@ -45,11 +45,11 @@ public:
     BgRunner() = delete;
 
 private:
-    friend class BgrThread;
+    friend class CpuCore;
     static BgRunner m_instance;
 
     ::std::atomic<uint32_t> m_config_running;
-    ::std::deque<std::unique_ptr<BgrThread>> m_thread;
+    ::std::deque<std::unique_ptr<CpuCore>> m_thread;
     bool m_stop;
 };
 

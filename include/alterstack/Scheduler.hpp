@@ -97,7 +97,7 @@ private:
     friend class Task;
     friend class Awaitable;
     friend class BgRunner;
-    friend class BgrThread;
+    friend class CpuCore;
 
     /**
      * @brief get Task* from running queue

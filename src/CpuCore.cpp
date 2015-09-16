@@ -18,7 +18,7 @@
  */
 
 #include "alterstack/AtomicGuard.hpp"
-#include "alterstack/BgrThread.hpp"
+#include "alterstack/CpuCore.hpp"
 #include "alterstack/BgRunner.hpp"
 #include "alterstack/Scheduler.hpp"
 #include "alterstack/Task.hpp"
@@ -27,20 +27,20 @@
 namespace alterstack
 {
 
-void BgrThread::thread_function()
+void CpuCore::thread_function()
 {
     m_thread_started.store(true, ::std::memory_order_release);
     AtomicReturnBoolGuard thread_stopped_guard(m_thread_stopped);
     Scheduler::create_native_task();
     Scheduler::m_thread_info->native_runner = false;
-    LOG << "BgrThread::thread_function: started\n";
+    LOG << "CpuCore::thread_function: started\n";
 
     while( true )
     {
         Task* next_task = Scheduler::get_next_from_queue();
         if( next_task != nullptr )
         {
-            LOG << "BgrThread::thread_function: got new task, switching on " << next_task << "\n";
+            LOG << "CpuCore::thread_function: got new task, switching on " << next_task << "\n";
             Scheduler::switch_to(next_task);
         }
 
@@ -49,9 +49,9 @@ void BgrThread::thread_function()
         {
             return;
         }
-        LOG << "BgrThread::thread_function: waiting...\n";
+        LOG << "CpuCore::thread_function: waiting...\n";
         Scheduler::m_task_ready.wait(queue_guard);
-        LOG << "BgrThread::thread_function: waked up\n";
+        LOG << "CpuCore::thread_function: waked up\n";
         if(  __builtin_expect( m_bg_runner.m_stop, false ) )
         {
             return;
@@ -60,27 +60,27 @@ void BgrThread::thread_function()
     }
 }
 
-BgrThread::BgrThread(BgRunner &bg_runner)
+CpuCore::CpuCore(BgRunner &bg_runner)
     :m_bg_runner(bg_runner)
 {
-    LOG << "BgrThread::BgrThread\n";
+    LOG << "CpuCore::CpuCore\n";
     m_thread_started.store(false, ::std::memory_order_relaxed);
     m_thread_stopped.store(false, ::std::memory_order_release);
-    m_thread = ::std::thread(&BgrThread::thread_function, this);
+    m_thread = ::std::thread(&CpuCore::thread_function, this);
 }
 
-BgrThread::~BgrThread()
+CpuCore::~CpuCore()
 {
     m_bg_runner.m_stop = true; // FIXME: m_stop is reference to BgRunner's m_stop member
     Scheduler::m_task_ready.notify_all();
     while(!m_thread_started.load())
     {
-        LOG << "BgrThread::~BgrThread(): waiting thread_function to start\n";
+        LOG << "CpuCore::~CpuCore(): waiting thread_function to start\n";
         std::this_thread::yield();
     }
     while( !m_thread_stopped.load() )
     {
-        LOG << "BgrThread::~BgrThread(): waiting thread_function to stop\n";
+        LOG << "CpuCore::~CpuCore(): waiting thread_function to stop\n";
         std::this_thread::sleep_for(::std::chrono::microseconds(1));
         Scheduler::m_task_ready.notify_all();
     }

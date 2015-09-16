@@ -64,7 +64,7 @@ set(alterstack_SRCS
     src/Awaitable.cpp
     src/Scheduler.cpp
     src/BgRunner.cpp
-    src/BgrThread.cpp
+    src/CpuCore.cpp
     src/Stack.cpp
     src/Task.cpp
     src/TaskQueue.cpp
