@@ -71,7 +71,7 @@ CpuCore::CpuCore(BgRunner &bg_runner)
 
 CpuCore::~CpuCore()
 {
-    m_bg_runner.m_stop = true; // FIXME: m_stop is reference to BgRunner's m_stop member
+    m_bg_runner.m_stop = true;
     Scheduler::m_task_ready.notify_all();
     while(!m_thread_started.load())
     {
