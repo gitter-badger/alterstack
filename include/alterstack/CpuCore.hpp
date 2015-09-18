@@ -42,6 +42,10 @@ public:
      */
     ~CpuCore();
 
+    void request_stop();
+    void stop();
+    void wake_up();
+
 private:
     void thread_function();
 
