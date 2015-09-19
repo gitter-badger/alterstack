@@ -31,28 +31,51 @@ class BgRunner;
 class CpuCore
 {
 public:
-    CpuCore() = delete;
+    CpuCore(const CpuCore&) = delete;
+    CpuCore(CpuCore&&) = delete;
+    CpuCore& operator=(const CpuCore&) = delete;
+    CpuCore& operator=(CpuCore&&) = delete;
     /**
      * @brief start one OS thread
      * @param bg_runner reference to BgRunner
      */
-    CpuCore(BgRunner& bg_runner);
+    CpuCore();
     /**
      * @brief destructor stops OS thread, return when it's stopped
      */
     ~CpuCore();
-
+    /**
+     * @brief ask this CpuCore to stop
+     *
+     * do not wait for thread stop
+     */
     void request_stop();
-    void stop();
-    void wake_up();
+    /**
+     * @brief stop thread function, returns when thread stopped
+     */
+    void stop_thread();
+    [[deprecated("Not implemented")]] void wake_up();
 
 private:
     void thread_function();
+    /**
+     * @brief ensure that thread function started, wait until started
+     */
+    void ensure_thread_started();
+    /**
+     * @brief ensure that thread function stopped, wait until stop
+     */
+    void ensure_thread_stopped();
 
-    BgRunner&         m_bg_runner;
     std::thread       m_thread;
     std::atomic<bool> m_thread_started;
     std::atomic<bool> m_thread_stopped;
+    bool              m_stop_requested;
 };
+
+inline void CpuCore::request_stop()
+{
+    m_stop_requested = true;
+}
 
 }

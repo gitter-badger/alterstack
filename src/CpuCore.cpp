@@ -45,14 +45,14 @@ void CpuCore::thread_function()
         }
 
         ::std::unique_lock<std::mutex> queue_guard(Scheduler::m_queue_mutex);
-        if(  __builtin_expect( m_bg_runner.m_stop, false ) )
+        if(  __builtin_expect( m_stop_requested, false ) )
         {
             return;
         }
         LOG << "CpuCore::thread_function: waiting...\n";
         Scheduler::m_task_ready.wait(queue_guard);
         LOG << "CpuCore::thread_function: waked up\n";
-        if(  __builtin_expect( m_bg_runner.m_stop, false ) )
+        if(  __builtin_expect( m_stop_requested, false ) )
         {
             return;
         }
@@ -60,8 +60,27 @@ void CpuCore::thread_function()
     }
 }
 
-CpuCore::CpuCore(BgRunner &bg_runner)
-    :m_bg_runner(bg_runner)
+void CpuCore::ensure_thread_started()
+{
+    while(!m_thread_started.load())
+    {
+        LOG << "CpuCore::~CpuCore(): waiting thread_function to start\n";
+        std::this_thread::yield();
+    }
+}
+
+void CpuCore::ensure_thread_stopped()
+{
+    while( !m_thread_stopped.load() )
+    {
+        LOG << "CpuCore::~CpuCore(): waiting thread_function to stop\n";
+        std::this_thread::sleep_for(::std::chrono::microseconds(1));
+        Scheduler::m_task_ready.notify_all();
+    }
+}
+
+CpuCore::CpuCore()
+    :m_stop_requested(false)
 {
     LOG << "CpuCore::CpuCore\n";
     m_thread_started.store(false, ::std::memory_order_relaxed);
@@ -71,21 +90,17 @@ CpuCore::CpuCore(BgRunner &bg_runner)
 
 CpuCore::~CpuCore()
 {
-    m_bg_runner.m_stop = true;
-    Scheduler::m_task_ready.notify_all();
-    while(!m_thread_started.load())
-    {
-        LOG << "CpuCore::~CpuCore(): waiting thread_function to start\n";
-        std::this_thread::yield();
-    }
-    while( !m_thread_stopped.load() )
-    {
-        LOG << "CpuCore::~CpuCore(): waiting thread_function to stop\n";
-        std::this_thread::sleep_for(::std::chrono::microseconds(1));
-        Scheduler::m_task_ready.notify_all();
-    }
+    stop_thread();
     m_thread.join();
     LOG << "Processor finished\n";
+}
+
+void CpuCore::stop_thread()
+{
+    request_stop();
+    Scheduler::m_task_ready.notify_all();
+    ensure_thread_started();
+    ensure_thread_stopped();
 }
 
 }

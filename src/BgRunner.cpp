@@ -28,18 +28,20 @@ namespace alterstack
 
 BgRunner::BgRunner(uint32_t running)
     :m_config_running(running)
-    ,m_stop(false)
 {
     LOG << "BgRunner::BgRunner()\n";
     for(uint32_t i = 0; i < running; ++i)
     {
-        m_thread.push_back(::std::make_unique<CpuCore>(*this));
+        m_thread.push_back(::std::make_unique<CpuCore>());
     }
 }
 
 BgRunner::~BgRunner()
 {
-    m_stop = true;
+    for( auto& core: m_thread)
+    {
+        core->request_stop();
+    }
     LOG << "BgRunner::~BgRunner()\n";
 }
 

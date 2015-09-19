@@ -50,7 +50,6 @@ private:
 
     ::std::atomic<uint32_t> m_config_running;
     ::std::deque<std::unique_ptr<CpuCore>> m_thread;
-    bool m_stop;
 };
 
 }

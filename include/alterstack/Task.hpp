@@ -57,8 +57,8 @@ public:
     ~Task();
     Task(const Task&) = delete;
     Task(Task&&)      = delete;
-    Task& operator=(const Task&) & = delete;
-    Task& operator=(Task&&) &      = delete;
+    Task& operator=(const Task&) = delete;
+    Task& operator=(Task&&)      = delete;
 
     /**
      * @brief temporary function (HACK)
