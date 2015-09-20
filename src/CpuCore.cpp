@@ -29,6 +29,7 @@
 
 namespace alterstack
 {
+::std::atomic<uint32_t> CpuCore::m_sleep_count;
 
 void CpuCore::thread_function()
 {
@@ -36,8 +37,10 @@ void CpuCore::thread_function()
     AtomicReturnBoolGuard thread_stopped_guard(m_thread_stopped);
     Scheduler::create_native_task_for_current_thread();
     Scheduler::m_thread_info->native_runner = false;
+
     static const char* name = "CpuCore";
     ::prctl(PR_SET_NAME, reinterpret_cast<unsigned long>(name));
+
     LOG << "CpuCore::thread_function: started\n";
 
     while( true )
@@ -50,16 +53,14 @@ void CpuCore::thread_function()
         }
 
         ::std::unique_lock<std::mutex> task_ready_guard(m_task_avalable_mutex);
-        if( is_stop_requested() )
+        if( is_stop_requested_no_lock() )
         {
             return;
         }
         LOG << "CpuCore::thread_function: waiting...\n";
-        m_task_avalable.wait_for(
-                    task_ready_guard
-                    ,::std::chrono::milliseconds(1000)); // fallback for losted notify
+        wait_on_cv(task_ready_guard);
         LOG << "CpuCore::thread_function: waked up\n";
-        if( is_stop_requested() )
+        if( is_stop_requested_no_lock() )
         {
             return;
         }
@@ -84,6 +85,16 @@ void CpuCore::ensure_thread_stopped()
         std::this_thread::sleep_for(::std::chrono::microseconds(1));
         wake_up();
     }
+}
+
+void CpuCore::wait_on_cv(::std::unique_lock<std::mutex>& task_ready_guard)
+{
+    m_sleep_count.fetch_add(1, std::memory_order_relaxed);
+    m_task_avalable.wait_for(
+                task_ready_guard
+                ,::std::chrono::milliseconds(1000)); // fallback for losted notify
+    m_sleep_count.fetch_sub(1, std::memory_order_relaxed);
+
 }
 
 CpuCore::CpuCore()

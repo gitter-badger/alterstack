@@ -17,10 +17,12 @@
  * along with Alterstack.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "alterstack/AtomicGuard.hpp"
 #include "alterstack/BgRunner.hpp"
+
+#include "alterstack/AtomicGuard.hpp"
 #include "alterstack/Scheduler.hpp"
 #include "alterstack/Task.hpp"
+#include "alterstack/CpuCore.hpp"
 #include "alterstack/Logger.hpp"
 
 namespace alterstack
@@ -46,9 +48,12 @@ BgRunner::~BgRunner()
 
 void BgRunner::wake_up_all()
 {
-    for( auto& core: m_cpu_core_list)
+    if( CpuCore::sleep_count() )
     {
-        core->wake_up();
+        for( auto& core: m_cpu_core_list)
+        {
+            core->wake_up();
+        }
     }
 }
 

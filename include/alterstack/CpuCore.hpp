@@ -57,6 +57,11 @@ public:
      */
     void stop_thread();
     void wake_up();
+    /**
+     * @brief get current waiting CpuCore threads count
+     * @return number of currently sleeping threads
+     */
+    static uint32_t sleep_count();
 
 private:
     void thread_function();
@@ -68,7 +73,8 @@ private:
      * @brief ensure that thread function stopped, wait until stop
      */
     void ensure_thread_stopped();
-    bool is_stop_requested();
+    bool is_stop_requested_no_lock();
+    void wait_on_cv(::std::unique_lock<std::mutex> &task_ready_guard);
 
     std::thread       m_thread;         //!< OS thread
     std::atomic<bool> m_thread_started; //!< true if thread_function started
@@ -76,16 +82,24 @@ private:
     bool              m_stop_requested; //!< true when current CpuCore need to stop
     ::std::mutex      m_task_avalable_mutex; //!< mutex to sleep on conditional_variable
     ::std::condition_variable m_task_avalable; //!< conditional_variable to wait on
+
+    static ::std::atomic<uint32_t> m_sleep_count;
 };
 
 inline void CpuCore::request_stop()
 {
+    ::std::lock_guard<std::mutex> guard(m_task_avalable_mutex);
     m_stop_requested = true;
 }
 
-inline bool CpuCore::is_stop_requested()
+inline bool CpuCore::is_stop_requested_no_lock()
 {
     return  __builtin_expect( m_stop_requested, false );
+}
+
+inline uint32_t CpuCore::sleep_count()
+{
+    return m_sleep_count.load(std::memory_order_acquire);
 }
 
 }
