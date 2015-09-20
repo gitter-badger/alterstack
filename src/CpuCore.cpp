@@ -17,8 +17,11 @@
  * along with Alterstack.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "alterstack/AtomicGuard.hpp"
 #include "alterstack/CpuCore.hpp"
+
+#include <sys/prctl.h>
+
+#include "alterstack/AtomicGuard.hpp"
 #include "alterstack/BgRunner.hpp"
 #include "alterstack/Scheduler.hpp"
 #include "alterstack/Task.hpp"
@@ -33,6 +36,8 @@ void CpuCore::thread_function()
     AtomicReturnBoolGuard thread_stopped_guard(m_thread_stopped);
     Scheduler::create_native_task_for_current_thread();
     Scheduler::m_thread_info->native_runner = false;
+    static const char* name = "CpuCore";
+    ::prctl(PR_SET_NAME, reinterpret_cast<unsigned long>(name));
     LOG << "CpuCore::thread_function: started\n";
 
     while( true )
@@ -45,7 +50,7 @@ void CpuCore::thread_function()
         }
 
         ::std::unique_lock<std::mutex> task_ready_guard(m_task_avalable_mutex);
-        if(  __builtin_expect( m_stop_requested, false ) )
+        if( is_stop_requested() )
         {
             return;
         }
@@ -54,7 +59,7 @@ void CpuCore::thread_function()
                     task_ready_guard
                     ,::std::chrono::milliseconds(1000)); // fallback for losted notify
         LOG << "CpuCore::thread_function: waked up\n";
-        if(  __builtin_expect( m_stop_requested, false ) )
+        if( is_stop_requested() )
         {
             return;
         }

@@ -68,19 +68,24 @@ private:
      * @brief ensure that thread function stopped, wait until stop
      */
     void ensure_thread_stopped();
+    bool is_stop_requested();
 
-    std::thread       m_thread;
-    std::atomic<bool> m_thread_started;
-    std::atomic<bool> m_thread_stopped;
-    bool              m_stop_requested;
-    ::std::mutex      m_task_avalable_mutex;
-    ::std::condition_variable m_task_avalable;
-
+    std::thread       m_thread;         //!< OS thread
+    std::atomic<bool> m_thread_started; //!< true if thread_function started
+    std::atomic<bool> m_thread_stopped; //!< true if thread_function stopped
+    bool              m_stop_requested; //!< true when current CpuCore need to stop
+    ::std::mutex      m_task_avalable_mutex; //!< mutex to sleep on conditional_variable
+    ::std::condition_variable m_task_avalable; //!< conditional_variable to wait on
 };
 
 inline void CpuCore::request_stop()
 {
     m_stop_requested = true;
+}
+
+inline bool CpuCore::is_stop_requested()
+{
+    return  __builtin_expect( m_stop_requested, false );
 }
 
 }
