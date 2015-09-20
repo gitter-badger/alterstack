@@ -36,21 +36,35 @@ namespace alterstack
 class BgRunner
 {
 public:
+    BgRunner() = delete;
     /**
      * @brief thread pool constructor
      * @param running number of threads to start
      */
     BgRunner(uint32_t running=1);
     ~BgRunner();
-    BgRunner() = delete;
 
 private:
     friend class CpuCore;
+    friend class Scheduler;
+    /**
+     * @brief get BgRunner instance
+     * @return reference to BgRunner instance
+     */
+    static BgRunner& instance();
     static BgRunner m_instance;
+    /**
+     * @brief wake up all CpuCore's
+     */
+    void wake_up_all();
 
-    ::std::atomic<uint32_t> m_config_running;
-    ::std::deque<std::unique_ptr<CpuCore>> m_thread;
+    ::std::deque<std::unique_ptr<CpuCore>> m_cpu_core_list;
 };
+
+inline BgRunner& BgRunner::instance()
+{
+    return m_instance;
+}
 
 }
 

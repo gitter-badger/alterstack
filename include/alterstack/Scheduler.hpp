@@ -128,7 +128,7 @@ private:
     /**
      * @brief create thread_local native Task instance
      */
-    static void  create_native_task();
+    static void  create_native_task_for_current_thread();
     /**
      * @brief get next Task* to run using schedule algorithm of Scheduler
      * @return next running Task* or nullptr
@@ -146,11 +146,7 @@ private:
 
     static thread_local ::std::unique_ptr<AsThreadInfo> m_thread_info;
 
-    // running Tasks queue data
-    static ::std::mutex              m_queue_mutex;
-    //static ::std::deque<Task*>       m_running_queue; // FIXME: make running queue lockfree
-    static TaskQueue                 m_task_queue;
-    static ::std::condition_variable m_task_ready;
+    static TaskQueue m_task_queue; //!< running tasks queue
 };
 
 inline Task *Scheduler::get_task_list() noexcept

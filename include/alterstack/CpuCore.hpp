@@ -21,6 +21,8 @@
 
 #include <atomic>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 
 namespace alterstack
 {
@@ -54,7 +56,7 @@ public:
      * @brief stop thread function, returns when thread stopped
      */
     void stop_thread();
-    [[deprecated("Not implemented")]] void wake_up();
+    void wake_up();
 
 private:
     void thread_function();
@@ -71,6 +73,9 @@ private:
     std::atomic<bool> m_thread_started;
     std::atomic<bool> m_thread_stopped;
     bool              m_stop_requested;
+    ::std::mutex      m_task_avalable_mutex;
+    ::std::condition_variable m_task_avalable;
+
 };
 
 inline void CpuCore::request_stop()

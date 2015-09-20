@@ -31,7 +31,7 @@ void CpuCore::thread_function()
 {
     m_thread_started.store(true, ::std::memory_order_release);
     AtomicReturnBoolGuard thread_stopped_guard(m_thread_stopped);
-    Scheduler::create_native_task();
+    Scheduler::create_native_task_for_current_thread();
     Scheduler::m_thread_info->native_runner = false;
     LOG << "CpuCore::thread_function: started\n";
 
@@ -44,19 +44,21 @@ void CpuCore::thread_function()
             Scheduler::switch_to(next_task);
         }
 
-        ::std::unique_lock<std::mutex> queue_guard(Scheduler::m_queue_mutex);
+        ::std::unique_lock<std::mutex> task_ready_guard(m_task_avalable_mutex);
         if(  __builtin_expect( m_stop_requested, false ) )
         {
             return;
         }
         LOG << "CpuCore::thread_function: waiting...\n";
-        Scheduler::m_task_ready.wait(queue_guard);
+        m_task_avalable.wait_for(
+                    task_ready_guard
+                    ,::std::chrono::milliseconds(1000)); // fallback for losted notify
         LOG << "CpuCore::thread_function: waked up\n";
         if(  __builtin_expect( m_stop_requested, false ) )
         {
             return;
         }
-        queue_guard.unlock();
+        task_ready_guard.unlock();
     }
 }
 
@@ -75,7 +77,7 @@ void CpuCore::ensure_thread_stopped()
     {
         LOG << "CpuCore::~CpuCore(): waiting thread_function to stop\n";
         std::this_thread::sleep_for(::std::chrono::microseconds(1));
-        Scheduler::m_task_ready.notify_all();
+        wake_up();
     }
 }
 
@@ -98,9 +100,14 @@ CpuCore::~CpuCore()
 void CpuCore::stop_thread()
 {
     request_stop();
-    Scheduler::m_task_ready.notify_all();
+    wake_up();
     ensure_thread_started();
     ensure_thread_stopped();
+}
+
+void CpuCore::wake_up()
+{
+    m_task_avalable.notify_one();
 }
 
 }

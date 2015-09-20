@@ -26,9 +26,7 @@ namespace alterstack
 
 thread_local ::std::unique_ptr<AsThreadInfo> Scheduler::m_thread_info;
 
-::std::mutex              Scheduler::m_queue_mutex;
 TaskQueue                 Scheduler::m_task_queue;
-::std::condition_variable Scheduler::m_task_ready;
 
 // FIXME: remove this hack
 BgRunner BgRunner::m_instance{1};

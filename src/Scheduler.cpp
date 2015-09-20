@@ -21,9 +21,8 @@
 #include "alterstack/Stack.hpp"
 #include "alterstack/SpinLock.hpp"
 #include "alterstack/Context.hpp"
+#include "alterstack/BgRunner.hpp"
 #include "alterstack/Logger.hpp"
-
-#include "alterstack/Context.hpp"
 
 #include <string>
 #include <thread>
@@ -121,7 +120,7 @@ Task *Scheduler::get_current_task()
     {
         if( !m_thread_info->native_task )
         {
-            create_native_task();
+            create_native_task_for_current_thread();
         }
         m_thread_info->current_task = m_thread_info->native_task.get();
     }
@@ -136,12 +135,12 @@ Task *Scheduler::get_native_task()
     }
     if( !m_thread_info->native_task )
     {
-        create_native_task();
+        create_native_task_for_current_thread();
     }
     return m_thread_info->native_task.get();
 }
 
-void Scheduler::create_native_task()
+void Scheduler::create_native_task_for_current_thread()
 {
     if( !m_thread_info )
     {
@@ -188,7 +187,7 @@ void Scheduler::schedule_waiting_task()
 void Scheduler::wakeup_bg_runner() noexcept
 {
     LOG << "Scheduler::wakeup_bg_runner: wakeing up BgRunner\n";
-    m_task_ready.notify_one();
+    BgRunner::instance().wake_up_all(); // FIXME: wake up only one Core
 }
 
 Task* Scheduler::get_next_from_queue() noexcept

@@ -28,8 +28,8 @@ class Task;
 /**
  * @brief Lockfree Task queue
  *
- * TaskQueue implemented as lockfree pop-less stack. You can push one Task*, list of tasks or get whole
- * stored tasklist.
+ * TaskQueue implemented as lockfree pop-less stack. You can push one Task*,
+ * list of tasks or get whole stored tasklist.
  */
 class TaskQueue
 {
