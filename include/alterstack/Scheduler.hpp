@@ -145,7 +145,7 @@ private:
     static Task* get_task_list() noexcept;
 
     static thread_local ::std::unique_ptr<AsThreadInfo> m_thread_info;
-
+    // FIXME: move TaskQueue from Scheduler
     static TaskQueue m_task_queue; //!< running tasks queue
 };
 
