@@ -1,6 +1,6 @@
 /*
  * Copyright 2015 Alexey Syrnikov <san@masterspline.net>
- * 
+ *
  * This file is part of Alterstack.
  *
  * Alterstack is free software: you can redistribute it and/or modify
@@ -17,24 +17,13 @@
  * along with Alterstack.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#pragma once
+#include <iostream>
 
-#include <condition_variable>
-#include <mutex>
+#include "alterstack/task_buffer.hpp"
 
-namespace alterstack
+int main()
 {
-class Task;
-
-struct AsThreadInfo
-{
-    ::std::unique_ptr<Task>   native_task;
-    Task*                     current_task = nullptr;
-    Task*                     local_task_queue = nullptr;
-    ::std::mutex              native_mutex;
-    ::std::condition_variable native_ready;
-    /// used to distinguish AlterNative Task runner thread Native or BgRunner
-    bool                      native_runner = true;
-};
-
+    TaskBuffer buffer;
+    std::cout << &buffer << std::endl;
+    return 0;
 }

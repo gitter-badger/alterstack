@@ -1,7 +1,7 @@
 project(tests)
 
 #include_directories(${CMAKE_SOURCE_DIR}/ext/Catch/include)
-include(../cmake/AddExternalCatch.cmake)
+#include(../cmake/AddExternalCatch.cmake)
 
 add_executable(test_task_run_simple
     TaskRunSimple.cpp
@@ -60,3 +60,9 @@ add_executable(test_gai_test
 )
 target_link_libraries(test_gai_test ${COMMON_LIBS} )
 add_dependencies(test_gai_test EXT_CPU_UTILS)
+
+add_executable(task_buffer
+    task_buffer.cpp
+)
+target_link_libraries(task_buffer ${COMMON_LIBS} -pthread)
+add_test( task_buffer task_buffer )

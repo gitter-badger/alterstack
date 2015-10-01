@@ -226,19 +226,18 @@ void Scheduler::enqueue_task(Task *task) noexcept
     wakeup_bg_runner();
 }
 
-
 Task *Scheduler::get_next_task()
 {
     Task* current = get_current_task();
     Task* next_task = nullptr;
-    if( current->is_native() )
+    if( current->is_native() ) // Native thread in Native code calls yield()
     {
         LOG << "Scheduler::get_next_task: in Native\n";
         return get_next_from_queue();
     }
     else
     {
-        if( m_thread_info->native_runner ) // AlterStack Runner
+        if( m_thread_info->native_runner ) // Native thread running on AlterStack
         {
             LOG << "Scheduler::_get_next_task: in AlterNative\n";
             next_task = get_next_from_native();
@@ -248,7 +247,7 @@ Task *Scheduler::get_next_task()
             }
             return get_next_from_queue();
         }
-        else // BgRunner
+        else // BgRunner on Alternative stack
         {
             LOG << "Scheduler::_get_next_task: in BgRunner\n";
             return get_next_from_queue();

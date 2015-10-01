@@ -83,6 +83,7 @@ target_link_libraries(alterstack boost_context)
 #add_executable(ws_update ${ws_update_SRCS})
 #target_link_libraries(ws_update ${TCMALLOC_LIBRARIES} ${MongoDB_LIBRARIES})
 
+include(./cmake/AddExternalCatch.cmake)
 enable_testing()
 add_subdirectory(test)
 #find_package(GTest REQUIRED)

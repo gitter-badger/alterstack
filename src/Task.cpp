@@ -18,11 +18,12 @@
  */
 
 #include "alterstack/Task.hpp"
-#include "alterstack/Scheduler.hpp"
-#include "alterstack/Logger.hpp"
 
 #include <thread>
 #include <stdexcept>
+
+#include "alterstack/Scheduler.hpp"
+#include "alterstack/Logger.hpp"
 
 namespace alterstack
 {

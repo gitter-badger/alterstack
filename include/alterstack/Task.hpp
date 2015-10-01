@@ -19,15 +19,15 @@
 
 #pragma once
 
+#include <functional>
+#include <cstdint>
+#include <memory>
+
 #include "TaskState.hpp"
 #include "Scheduler.hpp"
 #include "Stack.hpp"
 #include "Context.hpp"
 #include "NativeInfo.hpp"
-
-#include <functional>
-#include <cstdint>
-#include <memory>
 
 namespace alterstack
 {
