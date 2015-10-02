@@ -62,6 +62,7 @@ target_link_libraries(test_gai_test ${COMMON_LIBS} )
 add_dependencies(test_gai_test EXT_CPU_UTILS)
 
 add_executable(task_buffer
+    catch_main.cpp
     task_buffer.cpp
 )
 target_link_libraries(task_buffer ${COMMON_LIBS} -pthread)

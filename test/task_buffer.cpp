@@ -19,11 +19,32 @@
 
 #include <iostream>
 
+#include <catch.hpp>
+
 #include "alterstack/task_buffer.hpp"
 
-int main()
+using alterstack::TaskBuffer;
+TEST_CASE("API check"/*,"[hide]"*/)
 {
     TaskBuffer buffer;
-    std::cout << &buffer << std::endl;
-    return 0;
+    SECTION( "sizeof(TaskBuffer) fits 64 bytes" ) {
+        REQUIRE( sizeof(TaskBuffer) <= 64 );
+    }
+    SECTION( "empty TaskBuffer returns nullptr" )
+    {
+        for(int i = 0; i < 16; ++i )
+        {
+            REQUIRE( buffer.get_task() == nullptr );
+        }
+    }
+    SECTION( "filled by one element returns it" )
+    {
+        alterstack::Task task;
+        buffer.put_task(&task);
+        REQUIRE( buffer.get_task() == &task );
+        for(int i = 0; i < 100; ++i )
+        {
+            REQUIRE( buffer.get_task() == nullptr );
+        }
+    }
 }
