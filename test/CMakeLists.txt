@@ -67,3 +67,9 @@ add_executable(task_buffer
 )
 target_link_libraries(task_buffer ${COMMON_LIBS} -pthread)
 add_test( task_buffer task_buffer )
+
+# load test
+add_executable(load_task_buffer
+    ./load_test/load_task_buffer.cpp
+)
+target_link_libraries(load_task_buffer ${COMMON_LIBS} -pthread)

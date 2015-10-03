@@ -28,30 +28,59 @@ class Task
 {
 private:
     friend class TaskBuffer;
+    friend class UnitTestAccessor;
     Task* next_ = nullptr;
 };
 
 /**
  * @brief Almost fifo lockfree buffer to hold Task* in RunningTaskQueue
  *
- * TaskBuffer is fifo like (Task* order can change) lockfree buffer which
- * hold Task* in RunningTaskQueue.
+ * TaskBuffer is fifo-like lockfree buffer which hold Task* in RunningTaskQueue.
+ * Task* order can change especially if stored Task* count exceeds buffer slots.
+ * TaskBuffer uses intrusive Task* list and does not need any memory except
+ * already allocated and stack for function local variables.
+ *
+ * Task* get_task() noexcept; return single Task* from buffer if exists
+ * or return nullptr
+ *
+ * void put_task(Task* task) noexcept; always put Task* (single or list)
+ * in buffer
  */
 class alignas(64) TaskBuffer
 {
 public:
-    TaskBuffer();
-    Task* get_task();
-    void put_task(Task* task);
+    TaskBuffer() noexcept;
+    /**
+     * @brief get Task* from TaskBuffer
+     * @return single Task* (not list) or nullptr if no Task* in buffer
+     */
+    Task* get_task() noexcept;
+    /**
+     * @brief store Task* in buffer slot (empty or nonempty)
+     *
+     * put_task(Task* task) will store task in single slot, it will not
+     * distribute it in different buffer slots even if task is list (this
+     * will done in get_task() stage).
+     * @param task Task* (single or list) to store
+     */
+    void put_task(Task* task) noexcept;
 private:
     /**
-     * @brief store Task* in any empty slot in buffer
+     * @brief store Task* (single or list) in any empty slot in buffer
      * @param task Task* to store
      * @return true if empty slot found and Task* stored there
      */
-    bool store_in_empty_slot(Task *task);
-    void store_in_occuped_slot(Task *task_list);
-    void store_tail(Task* task_list);
+    bool store_in_empty_slot(Task *task) noexcept;
+    /**
+     * @brief store Task* (single or list) in slot poined by put_position_
+     * @param task_list Task* list to store
+     */
+    void store_in_occupied_slot(Task *task_list) noexcept;
+    /**
+     * @brief distribute Task* list in empty slots first, and rest as list in occupied
+     * @param task_list list to store
+     */
+    void store_tail(Task* task_list) noexcept;
 
     static constexpr uint32_t buffer_size_ = 7; // to fit in 64 bytes cache line
     std::atomic<uint32_t> get_position_;
@@ -59,14 +88,14 @@ private:
     std::atomic<Task*>    buffer_[buffer_size_];
 };
 
-TaskBuffer::TaskBuffer()
+TaskBuffer::TaskBuffer() noexcept
 {
     std::fill(std::begin(buffer_), std::end(buffer_), nullptr);
     get_position_.store(0, std::memory_order_relaxed);
     put_position_.store(0, std::memory_order_release);
 }
 
-inline Task* TaskBuffer::get_task()
+inline Task* TaskBuffer::get_task() noexcept
 {
     Task* task;
     uint32_t index = get_position_.load(std::memory_order_acquire);
@@ -77,8 +106,8 @@ inline Task* TaskBuffer::get_task()
                     nullptr, std::memory_order_relaxed);
         if( task != nullptr )
         {
-            get_position_.fetch_add(1, std::memory_order_relaxed);
-            // FIXME: here I need to store task->next back in buffer if not nullptr
+            get_position_.fetch_add(1+i, std::memory_order_relaxed);
+            // store task->next back in buffer if not nullptr
             if( task->next_ != nullptr )
             {
                 Task* task_tail = task->next_;
@@ -101,7 +130,7 @@ inline Task* TaskBuffer::get_task()
     return task;
 }
 
-bool TaskBuffer::store_in_empty_slot(Task *task)
+bool TaskBuffer::store_in_empty_slot(Task *task) noexcept
 {
     uint32_t index = put_position_.load(std::memory_order_acquire);
     uint32_t i = 0;
@@ -113,7 +142,7 @@ bool TaskBuffer::store_in_empty_slot(Task *task)
                     ,std::memory_order_relaxed, std::memory_order_relaxed);
         if( change_done )
         {
-            put_position_.fetch_add(1, std::memory_order_release);
+            put_position_.fetch_add(1+i, std::memory_order_release);
             return true;
         }
         uint32_t next_index = put_position_.load(std::memory_order_acquire);
@@ -130,49 +159,59 @@ bool TaskBuffer::store_in_empty_slot(Task *task)
     return false;
 }
 
-inline void TaskBuffer::store_tail(Task *task_list)
+inline void TaskBuffer::store_tail(Task *task_list) noexcept
 {
-    while( task_list != nullptr)
+    for( uint32_t i = 0; i < buffer_size_-1; ++i)
     {
+        if( task_list == nullptr)
+        {
+            return;
+        }
         Task* task = task_list;
         task_list = task_list->next_;
         task->next_ = nullptr;
         if( !store_in_empty_slot(task) )
         {
             task->next_ = task_list;
-            store_in_occuped_slot(task);
-            break;
+            store_in_occupied_slot(task);
+            return;
         }
     }
+    store_in_occupied_slot(task_list);
 }
 
-inline void TaskBuffer::store_in_occuped_slot(Task *task_list)
+inline void TaskBuffer::store_in_occupied_slot(Task *task_list) noexcept
 {
-    Task* last_task = task_list;
+    uint32_t index = put_position_.fetch_add(1, std::memory_order_release);
+    Task* old_list = buffer_[index % buffer_size_].exchange(
+                task_list, std::memory_order_relaxed);
+    if( old_list == nullptr )
+    {
+        return;
+    }
+
+    Task* last_task = old_list;
     while( last_task->next_ != nullptr )
     {
         last_task = last_task->next_;
     }
     Task** last_next_ptr = &last_task->next_;
 
-    uint32_t index = put_position_.load(std::memory_order_acquire);
-    Task* stored = buffer_[index % buffer_size_].load(std::memory_order_acquire);
-    *last_next_ptr = stored;
+    *last_next_ptr = task_list;
     while( !buffer_[index % buffer_size_].compare_exchange_weak(
-               stored, task_list
+               task_list, old_list
                ,std::memory_order_release, std::memory_order_relaxed) )
     {
-        *last_next_ptr = stored;
+        *last_next_ptr = task_list;
     }
-    put_position_.fetch_add(1, std::memory_order_release);
 }
 
-inline void TaskBuffer::put_task(Task *task)
+inline void TaskBuffer::put_task(Task *task) noexcept
 {
     if( store_in_empty_slot(task) )
     {
         return;
     }
-    store_in_occuped_slot(task);
+    store_in_occupied_slot(task);
 }
 }
