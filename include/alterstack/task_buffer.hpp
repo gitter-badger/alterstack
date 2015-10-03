@@ -28,6 +28,7 @@ class Task
 {
 private:
     friend class TaskBuffer;
+    friend class TaskStack;
     friend class UnitTestAccessor;
     Task* next_ = nullptr;
 };
@@ -64,7 +65,9 @@ public:
      * @param task Task* (single or list) to store
      */
     void put_task(Task* task) noexcept;
-private:
+    Task *last_task_in_list(Task* old_list);
+
+    private:
     /**
      * @brief store Task* (single or list) in any empty slot in buffer
      * @param task Task* to store
@@ -180,6 +183,16 @@ inline void TaskBuffer::store_tail(Task *task_list) noexcept
     store_in_occupied_slot(task_list);
 }
 
+Task* TaskBuffer::last_task_in_list(Task* task_list)
+{
+    Task* last_task = task_list;
+    while( last_task->next_ != nullptr )
+    {
+        last_task = last_task->next_;
+    }
+    return last_task;
+}
+
 inline void TaskBuffer::store_in_occupied_slot(Task *task_list) noexcept
 {
     uint32_t index = put_position_.fetch_add(1, std::memory_order_release);
@@ -190,12 +203,7 @@ inline void TaskBuffer::store_in_occupied_slot(Task *task_list) noexcept
         return;
     }
 
-    Task* last_task = old_list;
-    while( last_task->next_ != nullptr )
-    {
-        last_task = last_task->next_;
-    }
-    Task** last_next_ptr = &last_task->next_;
+    Task** last_next_ptr = &last_task_in_list(old_list)->next_;
 
     *last_next_ptr = task_list;
     while( !buffer_[index % buffer_size_].compare_exchange_weak(

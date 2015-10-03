@@ -73,3 +73,10 @@ add_executable(load_task_buffer
     ./load_test/load_task_buffer.cpp
 )
 target_link_libraries(load_task_buffer ${COMMON_LIBS} -pthread)
+
+add_executable(task_stack
+    catch_main.cpp
+    task_stack.cpp
+)
+target_link_libraries(task_stack ${COMMON_LIBS} -pthread)
+add_test( task_stack task_stack )
