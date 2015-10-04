@@ -65,7 +65,12 @@ public:
      * @param task Task* (single or list) to store
      */
     void put_task(Task* task) noexcept;
-    Task *last_task_in_list(Task* old_list);
+    /**
+     * @brief find last Task* in Task list (next_ == nullptr)
+     * @param task_list Task* list
+     * @return Task* whose next_ == nullptr
+     */
+    static Task *find_last_task_in_list(Task* task_list);
 
     private:
     /**
@@ -95,18 +100,18 @@ TaskBuffer::TaskBuffer() noexcept
 {
     std::fill(std::begin(buffer_), std::end(buffer_), nullptr);
     get_position_.store(0, std::memory_order_relaxed);
-    put_position_.store(0, std::memory_order_release);
+    put_position_.store(0, std::memory_order_relaxed);
 }
 
 inline Task* TaskBuffer::get_task() noexcept
 {
     Task* task;
-    uint32_t index = get_position_.load(std::memory_order_acquire);
+    uint32_t index = get_position_.load(std::memory_order_relaxed);
     uint32_t i = 0;
     while( i < buffer_size_ )
     {
         task = buffer_[(index + i) % buffer_size_].exchange(
-                    nullptr, std::memory_order_relaxed);
+                    nullptr, std::memory_order_consume);
         if( task != nullptr )
         {
             get_position_.fetch_add(1+i, std::memory_order_relaxed);
@@ -119,7 +124,7 @@ inline Task* TaskBuffer::get_task() noexcept
             }
             break;
         }
-        uint32_t next_index = get_position_.load(std::memory_order_acquire);
+        uint32_t next_index = get_position_.load(std::memory_order_relaxed);
         if( index != next_index )
         {
             index = next_index;
@@ -135,20 +140,20 @@ inline Task* TaskBuffer::get_task() noexcept
 
 bool TaskBuffer::store_in_empty_slot(Task *task) noexcept
 {
-    uint32_t index = put_position_.load(std::memory_order_acquire);
+    uint32_t index = put_position_.load(std::memory_order_relaxed);
     uint32_t i = 0;
     while( i < buffer_size_ )
     {
         Task* expected = nullptr;
         bool change_done = buffer_[(index + i) % buffer_size_].compare_exchange_strong(
                     expected, task
-                    ,std::memory_order_relaxed, std::memory_order_relaxed);
+                    ,std::memory_order_release, std::memory_order_relaxed);
         if( change_done )
         {
-            put_position_.fetch_add(1+i, std::memory_order_release);
+            put_position_.fetch_add(1+i, std::memory_order_relaxed);
             return true;
         }
-        uint32_t next_index = put_position_.load(std::memory_order_acquire);
+        uint32_t next_index = put_position_.load(std::memory_order_relaxed);
         if( index != next_index )
         {
             index = next_index;
@@ -183,7 +188,7 @@ inline void TaskBuffer::store_tail(Task *task_list) noexcept
     store_in_occupied_slot(task_list);
 }
 
-Task* TaskBuffer::last_task_in_list(Task* task_list)
+Task* TaskBuffer::find_last_task_in_list(Task* task_list)
 {
     Task* last_task = task_list;
     while( last_task->next_ != nullptr )
@@ -195,15 +200,15 @@ Task* TaskBuffer::last_task_in_list(Task* task_list)
 
 inline void TaskBuffer::store_in_occupied_slot(Task *task_list) noexcept
 {
-    uint32_t index = put_position_.fetch_add(1, std::memory_order_release);
+    uint32_t index = put_position_.fetch_add(1, std::memory_order_relaxed);
     Task* old_list = buffer_[index % buffer_size_].exchange(
-                task_list, std::memory_order_relaxed);
+                task_list, std::memory_order_acq_rel);
     if( old_list == nullptr )
     {
         return;
     }
 
-    Task** last_next_ptr = &last_task_in_list(old_list)->next_;
+    Task** last_next_ptr = &find_last_task_in_list(old_list)->next_;
 
     *last_next_ptr = task_list;
     while( !buffer_[index % buffer_size_].compare_exchange_weak(

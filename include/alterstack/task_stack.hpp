@@ -61,9 +61,10 @@ inline bool TaskStack::push(Task *task) noexcept
     assert(task->next_ == nullptr);
     Task* head = head_.load(std::memory_order_acquire);
     task->next_ = head;
-    while( !head_.compare_exchange_weak(head,task
-                                        ,std::memory_order_release
-                                        ,std::memory_order_relaxed) )
+    while( !head_.compare_exchange_weak(
+               head,task
+               ,std::memory_order_release
+               ,std::memory_order_relaxed) )
     {
         task->next_ = head;
     }
@@ -72,7 +73,7 @@ inline bool TaskStack::push(Task *task) noexcept
 
 inline Task* TaskStack::pop_all() noexcept
 {
-    return head_.exchange(nullptr, std::memory_order_relaxed);
+    return head_.exchange(nullptr, std::memory_order_acquire);
 }
 
 }
