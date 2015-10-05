@@ -29,6 +29,7 @@ class Task
 private:
     friend class TaskBuffer;
     friend class TaskStack;
+    friend class RunningQueue;
     friend class UnitTestAccessor;
     Task* next_ = nullptr;
 };
@@ -52,7 +53,7 @@ class alignas(64) TaskBuffer
 public:
     TaskBuffer() noexcept;
     /**
-     * @brief get Task* from TaskBuffer
+     * @brief get Task* or nullptr from TaskBuffer
      * @return single Task* (not list) or nullptr if no Task* in buffer
      */
     Task* get_task() noexcept;

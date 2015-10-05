@@ -65,7 +65,7 @@ add_executable(task_buffer
     catch_main.cpp
     task_buffer.cpp
 )
-target_link_libraries(task_buffer ${COMMON_LIBS} -pthread)
+target_link_libraries(task_buffer ${COMMON_LIBS})
 add_test( task_buffer task_buffer )
 
 # load test
@@ -78,5 +78,17 @@ add_executable(task_stack
     catch_main.cpp
     task_stack.cpp
 )
-target_link_libraries(task_stack ${COMMON_LIBS} -pthread)
+target_link_libraries(task_stack ${COMMON_LIBS})
 add_test( task_stack task_stack )
+
+add_executable(running_queue
+    catch_main.cpp
+    running_queue.cpp
+)
+target_link_libraries(running_queue ${COMMON_LIBS})
+add_test( running_queue running_queue )
+# load test
+add_executable(load_running_queue
+    ./load_test/load_running_queue.cpp
+)
+target_link_libraries(load_running_queue ${COMMON_LIBS} -pthread)
