@@ -48,5 +48,12 @@
  * Native Task     | running queue        |wait on conditional_variable
  * AlterNative Task| Native, running queue|switch to Native and wait there
  * BgRunner (when running) | running queue|switch to Native (wait loop)
-
+ * @subsection running_queue Running Queue
+ * Running queue is lockfree so it is possible, that some thread calls
+ * RunningQueue::get_task and got nullptr, because other thread got Task list from stack,
+ * but still did not insert it in TaskBuffer. Running queue algorithm shown on this Figure.
+ *
+ * \image html https://masterspline.net/private/alterstack/image/RunningQueue.png
+ * In current implementation there is single running queue for all CPUs. Later per CPU
+ * queue will be implemented.
  */
