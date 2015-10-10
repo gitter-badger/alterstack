@@ -18,14 +18,15 @@
  */
 
 #include "alterstack/Scheduler.hpp"
+
+#include <string>
+#include <thread>
+
 #include "alterstack/Stack.hpp"
 #include "alterstack/SpinLock.hpp"
 #include "alterstack/Context.hpp"
 #include "alterstack/BgRunner.hpp"
 #include "alterstack/Logger.hpp"
-
-#include <string>
-#include <thread>
 
 namespace alterstack
 {
@@ -75,20 +76,23 @@ void Scheduler::switch_to(Task* new_task, TaskState old_task_state)
     switch( old_task_state )
     {
     case TaskState::Running:
-        prev_task = (Task*)::boost::context::jump_fcontext(&old_task->m_context
-                                                           ,new_task->m_context
-                                                           ,(intptr_t)old_task);
+        prev_task = (Task*)::boost::context::jump_fcontext(
+                    &old_task->m_context
+                    ,new_task->m_context
+                    ,(intptr_t)old_task);
         break;
     case TaskState::Waiting:
-        prev_task = (Task*)::boost::context::jump_fcontext(&old_task->m_context
-                                                           ,new_task->m_context
-                                                           ,(intptr_t)nullptr);
+        prev_task = (Task*)::boost::context::jump_fcontext(
+                    &old_task->m_context
+                    ,new_task->m_context
+                    ,(intptr_t)nullptr);
         break;
     default:
         Context tmp_context;
-        prev_task = (Task*)::boost::context::jump_fcontext(&tmp_context
-                                                           ,new_task->m_context
-                                                           ,(intptr_t)nullptr);
+        prev_task = (Task*)::boost::context::jump_fcontext(
+                    &tmp_context
+                    ,new_task->m_context
+                    ,(intptr_t)nullptr);
         break;
     }
 
@@ -192,17 +196,7 @@ void Scheduler::wakeup_bg_runner() noexcept
 
 Task* Scheduler::get_next_from_queue() noexcept
 {
-    if( m_thread_info->local_task_queue == nullptr )
-    {
-        m_thread_info->local_task_queue = m_task_queue.get_all();
-    }
-    if( m_thread_info->local_task_queue == nullptr )
-    {
-        LOG << "Scheduler::get_next_from_queue: queue is empty\n";
-        return nullptr;
-    }
-    Task* task = m_thread_info->local_task_queue;
-    m_thread_info->local_task_queue = task->m_next;
+    Task* task = running_queue_.get_task();
     LOG << "Scheduler::get_next_from_queue: got task " << task << " from running queue\n";
     return task;
 }
@@ -221,7 +215,7 @@ Task* Scheduler::get_next_from_native()
 void Scheduler::enqueue_task(Task *task) noexcept
 {
     assert(task != nullptr);
-    m_task_queue.push_one(task);
+    running_queue_.put_task(task);
     LOG << "Scheduler::enqueue_task: task " << task << " stored in running task queue\n";
     wakeup_bg_runner();
 }

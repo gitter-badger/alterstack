@@ -52,7 +52,6 @@ private:
      * @return reference to BgRunner instance
      */
     static BgRunner& instance();
-    static BgRunner m_instance;
     /**
      * @brief wake up all CpuCore's
      */
@@ -63,6 +62,7 @@ private:
 
 inline BgRunner& BgRunner::instance()
 {
+    static BgRunner m_instance(1);
     return m_instance;
 }
 

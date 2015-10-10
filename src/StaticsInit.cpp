@@ -23,13 +23,10 @@
 
 namespace alterstack
 {
-
 thread_local ::std::unique_ptr<AsThreadInfo> Scheduler::m_thread_info;
 
-TaskQueue                 Scheduler::m_task_queue;
-
-// FIXME: remove this hack
-BgRunner BgRunner::m_instance{1};
+// FIXME: use singleton for Scheduler and make running_queue_ not static
+RunningQueue<Task> Scheduler::running_queue_;
 }
 
 

@@ -32,6 +32,7 @@ namespace alterstack
  *
  * pop_all() will return all stored Task* and clean stack atomically
  */
+template<typename Task>
 class TaskStack
 {
 public:
@@ -50,13 +51,13 @@ public:
 private:
     std::atomic<Task*> head_;
 };
-
-inline TaskStack::TaskStack() noexcept
+template<typename Task>
+TaskStack<Task>::TaskStack() noexcept
 {
     head_.store(nullptr,std::memory_order_relaxed);
 }
-
-inline bool TaskStack::push(Task *task) noexcept
+template<typename Task>
+bool TaskStack<Task>::push(Task *task) noexcept
 {
     assert(task->next_ == nullptr);
     Task* head = head_.load(std::memory_order_acquire);
@@ -70,8 +71,8 @@ inline bool TaskStack::push(Task *task) noexcept
     }
     return (head == nullptr) ? true : false;
 }
-
-inline Task* TaskStack::pop_all() noexcept
+template<typename Task>
+Task* TaskStack<Task>::pop_all() noexcept
 {
     return head_.exchange(nullptr, std::memory_order_acquire);
 }

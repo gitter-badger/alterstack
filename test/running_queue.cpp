@@ -27,6 +27,16 @@
 
 namespace alterstack
 {
+class Task
+{
+private:
+    friend class TaskBuffer<Task>;
+    friend class TaskStack<Task>;
+    friend class RunningQueue<Task>;
+    friend class UnitTestAccessor;
+    Task* next_ = nullptr;
+};
+
 class UnitTestAccessor
 {
 public:
@@ -37,11 +47,12 @@ public:
 };
 }
 
+using alterstack::Task;
 using alterstack::RunningQueue;
 
 TEST_CASE("API check")
 {
-    RunningQueue queue;
+    RunningQueue<Task> queue;
     SECTION("RunningQueue aligned 64 bytes")
     {
         REQUIRE( (unsigned long long)(&queue) % 64 == 0);

@@ -32,10 +32,11 @@ namespace alterstack
  *
  * void put_task(Task* task) noexcept; enqueue single Task* in queue
  */
+template<typename Task>
 class RunningQueue
 {
 public:
-    //RunningTaskQueue() noexcept;
+    RunningQueue() = default;
     /**
      * @brief dequeue Task* or nullptr
      * @return single Task* (not list) or nullptr if no Task* in queue
@@ -49,11 +50,12 @@ public:
     void put_task(Task* task) noexcept;
 
     private:
-    TaskBuffer task_buffer_;
-    TaskStack  task_stack_;
+    TaskBuffer<Task> task_buffer_;
+    TaskStack<Task>  task_stack_;
 };
 
-Task *RunningQueue::get_task() noexcept
+template<typename Task>
+Task *RunningQueue<Task>::get_task() noexcept
 {
     Task* task = task_buffer_.get_task();
     if( task != nullptr )
@@ -74,7 +76,8 @@ Task *RunningQueue::get_task() noexcept
     return task;
 }
 
-inline void RunningQueue::put_task(Task *task) noexcept
+template<typename Task>
+void RunningQueue<Task>::put_task(Task *task) noexcept
 {
     if( task_stack_.push(task) )
     {

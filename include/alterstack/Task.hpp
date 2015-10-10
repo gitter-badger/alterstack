@@ -28,6 +28,9 @@
 #include "Stack.hpp"
 #include "Context.hpp"
 #include "NativeInfo.hpp"
+#include "task_buffer.hpp"
+#include "task_stack.hpp"
+#include "running_queue.hpp"
 
 namespace alterstack
 {
@@ -85,7 +88,10 @@ public:
 private:
     friend class Scheduler;
     friend class Awaitable; // for manipulating m_next intrusive list pointer
-    friend class TaskQueue;
+    friend class TaskBuffer<Task>;
+    friend class TaskStack<Task>;
+    friend class RunningQueue<Task>;
+    friend class UnitTestAccessor;
     friend class BgRunner;
 
     /**
@@ -95,7 +101,7 @@ private:
     static void _run_wrapper(intptr_t task_ptr) noexcept;
     bool is_native() noexcept;
 
-    Task*      m_next = nullptr;
+    Task*      next_ = nullptr;
     Context    m_context;
 
     AsThreadInfo* const m_native_info;

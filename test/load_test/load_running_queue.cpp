@@ -29,6 +29,16 @@
 
 namespace alterstack
 {
+class Task
+{
+private:
+    friend class TaskBuffer<Task>;
+    friend class TaskStack<Task>;
+    friend class RunningQueue<Task>;
+    friend class UnitTestAccessor;
+    Task* next_ = nullptr;
+};
+
 class UnitTestAccessor
 {
 public:
@@ -42,7 +52,7 @@ public:
 using alterstack::RunningQueue;
 using alterstack::Task;
 
-RunningQueue queue;
+RunningQueue<Task> queue;
 constexpr int TASKS_COUNT = 1000;
 std::vector<Task> tasks(TASKS_COUNT);
 

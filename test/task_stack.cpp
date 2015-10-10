@@ -27,6 +27,14 @@
 
 namespace alterstack
 {
+class Task
+{
+private:
+    friend class TaskStack<Task>;
+    friend class UnitTestAccessor;
+    Task* next_ = nullptr;
+};
+
 class UnitTestAccessor
 {
 public:
@@ -38,9 +46,11 @@ public:
 }
 
 using alterstack::TaskStack;
+using alterstack::Task;
+
 TEST_CASE("API check")
 {
-    TaskStack stack;
+    TaskStack<Task> stack;
     SECTION( "empty TaskStack returns nullptr" )
     {
         for(int i = 0; i < 16; ++i )

@@ -19,20 +19,20 @@
 
 #pragma once
 
-#include "Awaitable.hpp"
-#include "Context.hpp"
-#include "Stack.hpp"
-#include "NativeInfo.hpp"
-#include "Task.hpp"
-#include "Logger.hpp"
-#include "TaskQueue.hpp"
-
 #include <condition_variable>
 #include <mutex>
 #include <deque>
 #include <atomic>
 #include <cstdint>
 #include <cassert>
+
+#include "Awaitable.hpp"
+#include "Context.hpp"
+#include "Stack.hpp"
+#include "NativeInfo.hpp"
+#include "Task.hpp"
+#include "Logger.hpp"
+#include "running_queue.hpp"
 
 namespace alterstack
 {
@@ -138,21 +138,9 @@ private:
      * @brief wake up one BgRunner (if there is sleeping one)
      */
     static void  wakeup_bg_runner() noexcept;
-    /**
-     * @brief get running queue tasks list
-     * @return task list
-     */
-    static Task* get_task_list() noexcept;
 
     static thread_local ::std::unique_ptr<AsThreadInfo> m_thread_info;
-    // FIXME: move TaskQueue from Scheduler
-    static TaskQueue m_task_queue; //!< running tasks queue
+    static RunningQueue<Task> running_queue_;
 };
-
-inline Task *Scheduler::get_task_list() noexcept
-{
-    LOG << "Scheduler::get_task_list\n";
-    return m_task_queue.get_all();
-}
 
 }

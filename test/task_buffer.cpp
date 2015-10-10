@@ -27,6 +27,14 @@
 
 namespace alterstack
 {
+class Task
+{
+private:
+    friend class TaskBuffer<Task>;
+    friend class UnitTestAccessor;
+    Task* next_ = nullptr;
+};
+
 class UnitTestAccessor
 {
 public:
@@ -38,11 +46,12 @@ public:
 }
 
 using alterstack::TaskBuffer;
+using alterstack::Task;
 TEST_CASE("API check")
 {
-    TaskBuffer buffer;
+    TaskBuffer<Task> buffer;
     SECTION( "TaskBuffer fits in 64 bytes" ) {
-        REQUIRE( sizeof(TaskBuffer) <= 64 );
+        REQUIRE( sizeof(TaskBuffer<Task>) <= 64 );
     }
     SECTION( "empty TaskBuffer returns nullptr" )
     {

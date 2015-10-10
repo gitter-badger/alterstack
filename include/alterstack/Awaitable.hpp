@@ -53,7 +53,7 @@ public:
      */
     ~Awaitable();
     /**
-     * @brief stop current Task untill Awaitable will be released
+     * @brief stop current Task until Awaitable will be released
      *
      * If Awaitable finished -> return immediately.
      * Else add current task in waiters list and switch OS thread to next running Task

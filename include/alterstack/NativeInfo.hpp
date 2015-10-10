@@ -30,10 +30,9 @@ struct AsThreadInfo
 {
     ::std::unique_ptr<Task>   native_task;
     Task*                     current_task = nullptr;
-    Task*                     local_task_queue = nullptr;
     ::std::mutex              native_mutex;
     ::std::condition_variable native_ready;
-    /// used to distinguish AlterNative Task runner thread Native or BgRunner
+    /// used to distinguish AlterNative Task runner thread Native vs. BgRunner
     bool                      native_runner = true;
 };
 

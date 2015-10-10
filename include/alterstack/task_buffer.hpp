@@ -22,18 +22,9 @@
 #include <algorithm>
 #include <cstdint>
 #include <atomic>
+
 namespace alterstack
 {
-class Task
-{
-private:
-    friend class TaskBuffer;
-    friend class TaskStack;
-    friend class RunningQueue;
-    friend class UnitTestAccessor;
-    Task* next_ = nullptr;
-};
-
 /**
  * @brief Almost fifo lockfree buffer to hold Task* in RunningTaskQueue
  *
@@ -48,6 +39,7 @@ private:
  * void put_task(Task* task) noexcept; always put Task* (single or list)
  * in buffer
  */
+template<typename Task>
 class alignas(64) TaskBuffer
 {
 public:
@@ -96,15 +88,15 @@ public:
     std::atomic<uint32_t> put_position_;
     std::atomic<Task*>    buffer_[buffer_size_];
 };
-
-TaskBuffer::TaskBuffer() noexcept
+template<typename Task>
+TaskBuffer<Task>::TaskBuffer() noexcept
 {
     std::fill(std::begin(buffer_), std::end(buffer_), nullptr);
     get_position_.store(0, std::memory_order_relaxed);
     put_position_.store(0, std::memory_order_relaxed);
 }
-
-inline Task* TaskBuffer::get_task() noexcept
+template<typename Task>
+Task* TaskBuffer<Task>::get_task() noexcept
 {
     Task* task;
     uint32_t index = get_position_.load(std::memory_order_relaxed);
@@ -139,7 +131,8 @@ inline Task* TaskBuffer::get_task() noexcept
     return task;
 }
 
-bool TaskBuffer::store_in_empty_slot(Task *task) noexcept
+template<typename Task>
+bool TaskBuffer<Task>::store_in_empty_slot(Task *task) noexcept
 {
     uint32_t index = put_position_.load(std::memory_order_relaxed);
     uint32_t i = 0;
@@ -168,7 +161,8 @@ bool TaskBuffer::store_in_empty_slot(Task *task) noexcept
     return false;
 }
 
-inline void TaskBuffer::store_tail(Task *task_list) noexcept
+template<typename Task>
+void TaskBuffer<Task>::store_tail(Task *task_list) noexcept
 {
     for( uint32_t i = 0; i < buffer_size_-1; ++i)
     {
@@ -189,7 +183,8 @@ inline void TaskBuffer::store_tail(Task *task_list) noexcept
     store_in_occupied_slot(task_list);
 }
 
-Task* TaskBuffer::find_last_task_in_list(Task* task_list)
+template<typename Task>
+Task* TaskBuffer<Task>::find_last_task_in_list(Task* task_list)
 {
     Task* last_task = task_list;
     while( last_task->next_ != nullptr )
@@ -199,7 +194,8 @@ Task* TaskBuffer::find_last_task_in_list(Task* task_list)
     return last_task;
 }
 
-inline void TaskBuffer::store_in_occupied_slot(Task *task_list) noexcept
+template<typename Task>
+void TaskBuffer<Task>::store_in_occupied_slot(Task *task_list) noexcept
 {
     uint32_t index = put_position_.fetch_add(1, std::memory_order_relaxed);
     Task* old_list = buffer_[index % buffer_size_].exchange(
@@ -220,7 +216,8 @@ inline void TaskBuffer::store_in_occupied_slot(Task *task_list) noexcept
     }
 }
 
-inline void TaskBuffer::put_task(Task *task) noexcept
+template<typename Task>
+void TaskBuffer<Task>::put_task(Task *task) noexcept
 {
     if( store_in_empty_slot(task) )
     {

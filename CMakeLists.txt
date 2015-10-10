@@ -67,7 +67,6 @@ set(alterstack_SRCS
     src/CpuCore.cpp
     src/Stack.cpp
     src/Task.cpp
-    src/TaskQueue.cpp
 )
 
 add_definitions(-std=c++14 -Wall -pedantic -mtune=native -march=native -pthread)

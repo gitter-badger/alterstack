@@ -61,7 +61,7 @@ bool Awaitable::insert_current_task_in_waitlist()
     // in this tiny time it can be woken up, moved in running queue and executed
     // m_context = nullptr to protect from switching to it
     current_task->m_context = nullptr;
-    current_task->m_next = aw_data.head;
+    current_task->next_ = aw_data.head;
     AwaitableData new_aw_data;
     new_aw_data.head = current_task;
     while(!::std::atomic_compare_exchange_weak_explicit(
@@ -80,10 +80,10 @@ bool Awaitable::insert_current_task_in_waitlist()
             current_task->m_context = (void*)0x01;
             return false;
         }
-        current_task->m_next = aw_data.head;
+        current_task->next_ = aw_data.head;
     }
     LOG << "Awaitable::wait: current Task equeued\n";
-    LOG << "Awaitable::wait: current Task* m_next " << current_task->m_next << "\n";
+    LOG << "Awaitable::wait: current Task* m_next " << current_task->next_ << "\n";
     LOG << "Awaitable::wait: Awaitable m_next " << new_aw_data.head << "\n";
     return true;
 }
@@ -127,7 +127,7 @@ void Awaitable::release()
     {
         Task* task = next_task;
         // after wakeing up task can be deleted before next iteration in this loop
-        next_task = next_task->m_next;
+        next_task = next_task->next_;
         if( task->is_native() )
         {
             LOG << "Awaitable::release: task " << task <<
