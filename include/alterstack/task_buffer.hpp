@@ -33,8 +33,8 @@ namespace alterstack
  * TaskBuffer uses intrusive Task* list and does not need any memory except
  * already allocated and stack for function local variables.
  *
- * Task* get_task() noexcept; return single Task* from buffer if exists
- * or return nullptr
+ * Task* get_task(bool &have_more) noexcept; return single Task* from buffer if
+ * exists or return nullptr
  *
  * void put_task(Task* task) noexcept; always put Task* (single or list)
  * in buffer
@@ -46,9 +46,13 @@ public:
     TaskBuffer() noexcept;
     /**
      * @brief get Task* or nullptr from TaskBuffer
+     *
+     * In most cases (false negative possible) get_task(bool &have_more)
+     * also set have_more flag to true if there is more Task* in buffer.
+     * @param have_more will be set to true, if there is more Task* (not always)
      * @return single Task* (not list) or nullptr if no Task* in buffer
      */
-    Task* get_task() noexcept;
+    Task* get_task(bool &have_more) noexcept;
     /**
      * @brief store Task* in buffer slot (empty or nonempty)
      *
@@ -96,7 +100,7 @@ TaskBuffer<Task>::TaskBuffer() noexcept
     put_position_.store(0, std::memory_order_relaxed);
 }
 template<typename Task>
-Task* TaskBuffer<Task>::get_task() noexcept
+Task* TaskBuffer<Task>::get_task(bool& have_more) noexcept
 {
     Task* task;
     uint32_t index = get_position_.load(std::memory_order_relaxed);
@@ -114,6 +118,7 @@ Task* TaskBuffer<Task>::get_task() noexcept
                 Task* task_tail = task->next_;
                 store_tail(task_tail);
                 task->next_ = nullptr;
+                have_more = true;
             }
             break;
         }

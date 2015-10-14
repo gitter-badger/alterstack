@@ -60,7 +60,8 @@ void thread_function()
     {
         alterstack::Task* task;
         std::set<alterstack::Task*> task_set;
-        while( (task = buffer.get_task()) != nullptr )
+        bool have_more_tasks = false;
+        while( (task = buffer.get_task(have_more_tasks)) != nullptr )
         {
             if( alterstack::UnitTestAccessor::get_next(task) != nullptr )
             {
@@ -104,7 +105,8 @@ int main()
     t2.join();
     alterstack::Task* task;
     std::set<alterstack::Task*> task_set;
-    while( (task = buffer.get_task()) != nullptr )
+    bool have_more_tasks = false;
+    while( (task = buffer.get_task(have_more_tasks)) != nullptr )
     {
         if( alterstack::UnitTestAccessor::get_next(task) != nullptr )
         {

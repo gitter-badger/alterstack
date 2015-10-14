@@ -39,9 +39,14 @@ public:
     RunningQueue() = default;
     /**
      * @brief dequeue Task* or nullptr
+     *
+     * Dequeue Task* and set flag if there is more stored Task. Sometimes flag
+     * can be not set even queue has more stored Task* (false negative). Will
+     * never store false in this flag.
+     * @param have_more_tasks will set this flag to true, if there is more tasks
      * @return single Task* (not list) or nullptr if no Task* in queue
      */
-    Task* get_task() noexcept;
+    Task* get_task(bool &have_more_tasks) noexcept;
     /**
      * @brief enqueue single Task* in queue
      *
@@ -55,9 +60,9 @@ public:
 };
 
 template<typename Task>
-Task *RunningQueue<Task>::get_task() noexcept
+Task *RunningQueue<Task>::get_task(bool& have_more_tasks) noexcept
 {
-    Task* task = task_buffer_.get_task();
+    Task* task = task_buffer_.get_task(have_more_tasks);
     if( task != nullptr )
     {
         return task;
@@ -71,6 +76,7 @@ Task *RunningQueue<Task>::get_task() noexcept
         if( task_list != nullptr )
         {
             task_buffer_.put_task(task_list);
+            have_more_tasks = true;
         }
     }
     return task;

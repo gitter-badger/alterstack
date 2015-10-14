@@ -57,4 +57,16 @@ void BgRunner::wake_up_all()
     }
 }
 
+void BgRunner::notify()
+{
+    if( CpuCore::sleep_count() )
+    {
+        // FIXME: only single CpuCore need to by notifyed here
+        for( auto& core: m_cpu_core_list)
+        {
+            core->wake_up();
+        }
+    }
+}
+
 }

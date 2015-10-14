@@ -56,6 +56,12 @@ private:
      * @brief wake up all CpuCore's
      */
     void wake_up_all();
+    /**
+     * @brief notify BgRunner, that there is more Task s in RunningQueue
+     *
+     * If some CpuCore is sleeping, one will be woked up
+     */
+    void notify();
 
     ::std::deque<std::unique_ptr<CpuCore>> m_cpu_core_list;
 };

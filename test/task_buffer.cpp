@@ -29,7 +29,8 @@ namespace alterstack
 {
 class Task
 {
-private:
+//private:
+public:
     friend class TaskBuffer<Task>;
     friend class UnitTestAccessor;
     Task* next_ = nullptr;
@@ -50,6 +51,7 @@ using alterstack::Task;
 TEST_CASE("API check")
 {
     TaskBuffer<Task> buffer;
+    bool have_more_tasks = false;
     SECTION( "TaskBuffer fits in 64 bytes" ) {
         REQUIRE( sizeof(TaskBuffer<Task>) <= 64 );
     }
@@ -57,19 +59,19 @@ TEST_CASE("API check")
     {
         for(int i = 0; i < 16; ++i )
         {
-            REQUIRE( buffer.get_task() == nullptr );
+            REQUIRE( buffer.get_task(have_more_tasks) == nullptr );
         }
     }
     SECTION( "filled by one element returns it" )
     {
         alterstack::Task task;
         buffer.put_task(&task);
-        REQUIRE( buffer.get_task() == &task );
+        REQUIRE( buffer.get_task(have_more_tasks) == &task );
         SECTION( "and after that returns nullptr" )
         {
             for(int i = 0; i < 100; ++i )
             {
-                REQUIRE( buffer.get_task() == nullptr );
+                REQUIRE( buffer.get_task(have_more_tasks) == nullptr );
             }
         }
     }
@@ -77,7 +79,7 @@ TEST_CASE("API check")
     {
         alterstack::Task task;
         buffer.put_task(&task);
-        alterstack::Task* got_task = buffer.get_task();
+        alterstack::Task* got_task = buffer.get_task(have_more_tasks);
         REQUIRE( alterstack::UnitTestAccessor::get_next(got_task) == nullptr );
     }
     constexpr int TASKS_COUNT = 100;
@@ -90,7 +92,7 @@ TEST_CASE("API check")
         }
         alterstack::Task* task;
         std::set<alterstack::Task*> task_set;
-        while( (task = buffer.get_task()) != nullptr )
+        while( (task = buffer.get_task(have_more_tasks)) != nullptr )
         {
             REQUIRE( alterstack::UnitTestAccessor::get_next(task) == nullptr );
             task_set.insert(task);
@@ -100,5 +102,26 @@ TEST_CASE("API check")
         {
             REQUIRE( task_set.find(&task) != task_set.end() );
         }
+    }
+    SECTION( "get_task will not set have_more flag with one Task*" )
+    {
+        alterstack::Task task;
+        buffer.put_task(&task);
+        have_more_tasks = false;
+        alterstack::Task* got_task = buffer.get_task(have_more_tasks);
+        REQUIRE( have_more_tasks == false );
+    }
+    SECTION( "get_task will set have_more flag with two Task*s" )
+    {
+        alterstack::Task task1;
+        alterstack::Task task2;
+        task2.next_ = &task1;
+        buffer.put_task(&task2);
+        have_more_tasks = false;
+        buffer.get_task(have_more_tasks);
+        REQUIRE( have_more_tasks == true );
+        have_more_tasks = false;
+        buffer.get_task(have_more_tasks);
+        REQUIRE( have_more_tasks == false );
     }
 }

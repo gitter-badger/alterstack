@@ -196,8 +196,14 @@ void Scheduler::wakeup_bg_runner() noexcept
 
 Task* Scheduler::get_next_from_queue() noexcept
 {
-    Task* task = running_queue_.get_task();
+    bool have_more_tasks = false;
+    Task* task = running_queue_.get_task(have_more_tasks);
     LOG << "Scheduler::get_next_from_queue: got task " << task << " from running queue\n";
+    if( task != nullptr
+            && have_more_tasks)
+    {
+        wakeup_bg_runner();
+    }
     return task;
 }
 
