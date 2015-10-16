@@ -54,7 +54,7 @@ public:
      */
     void put_task(Task* task) noexcept;
 
-    private:
+private:
     TaskBuffer<Task> task_buffer_;
     TaskStack<Task>  task_stack_;
 };

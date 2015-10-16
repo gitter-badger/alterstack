@@ -48,6 +48,7 @@
  * Native Task     | running queue        |wait on conditional_variable
  * AlterNative Task| Native, running queue|switch to Native and wait there
  * BgRunner (when running) | running queue|switch to Native (wait loop)
+ * \image html https://masterspline.net/private/alterstack/image/Scheduler.png "Scheduler architecture"
  * @subsection running_queue Running Queue
  * Running queue is lockfree so it is possible, that some thread calls
  * RunningQueue::get_task and got nullptr, because other thread got Task list from stack,

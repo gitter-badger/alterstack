@@ -24,9 +24,6 @@
 namespace alterstack
 {
 thread_local ::std::unique_ptr<AsThreadInfo> Scheduler::m_thread_info;
-
-// FIXME: use singleton for Scheduler and make running_queue_ not static
-RunningQueue<Task> Scheduler::running_queue_;
 }
 
 

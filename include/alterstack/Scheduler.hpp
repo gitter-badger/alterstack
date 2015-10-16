@@ -19,20 +19,21 @@
 
 #pragma once
 
-#include <condition_variable>
 #include <mutex>
 #include <deque>
 #include <atomic>
 #include <cstdint>
 #include <cassert>
+#include <condition_variable>
 
+#include "running_queue.hpp"
 #include "Awaitable.hpp"
 #include "Context.hpp"
 #include "Stack.hpp"
 #include "NativeInfo.hpp"
 #include "Task.hpp"
+#include "BgRunner.hpp"
 #include "Logger.hpp"
-#include "running_queue.hpp"
 
 namespace alterstack
 {
@@ -48,6 +49,12 @@ class Task;
  */
 class Scheduler
 {
+private:
+    Scheduler();
+    Scheduler(const Scheduler&) = delete;
+    Scheduler(Scheduler&&) = delete;
+    Scheduler& operator=(const Scheduler&) = delete;
+    Scheduler& operator=(Scheduler&&) = delete;
 public:
     /**
      * @brief schedule next task on current OS thread
@@ -92,6 +99,11 @@ public:
      * @param old_task task to store
      */
     static void post_switch_fixup(Task *old_task);
+    /**
+     * @brief get Scheduler instance singleton
+     * @return Scheduler& singleton instance
+     */
+    static Scheduler& instance();
 
 private:
     friend class Task;
@@ -134,13 +146,21 @@ private:
      * @return next running Task* or nullptr
      */
     static Task* get_next_task();
-    /**
-     * @brief wake up one BgRunner (if there is sleeping one)
-     */
-    static void  wakeup_bg_runner() noexcept;
 
     static thread_local ::std::unique_ptr<AsThreadInfo> m_thread_info;
-    static RunningQueue<Task> running_queue_;
+    BgRunner bg_runner_;
+    RunningQueue<Task> running_queue_;
 };
+
+inline Scheduler::Scheduler()
+    :bg_runner_(1)
+    ,running_queue_()
+{}
+
+inline Scheduler& Scheduler::instance()
+{
+    static Scheduler scheduler;
+    return scheduler;
+}
 
 }

@@ -48,14 +48,9 @@ private:
     friend class CpuCore;
     friend class Scheduler;
     /**
-     * @brief get BgRunner instance
-     * @return reference to BgRunner instance
+     * @brief wake up all sleeping CpuCore's
      */
-    static BgRunner& instance();
-    /**
-     * @brief wake up all CpuCore's
-     */
-    void wake_up_all();
+    void notify_all();
     /**
      * @brief notify BgRunner, that there is more Task s in RunningQueue
      *
@@ -65,12 +60,6 @@ private:
 
     ::std::deque<std::unique_ptr<CpuCore>> m_cpu_core_list;
 };
-
-inline BgRunner& BgRunner::instance()
-{
-    static BgRunner m_instance(1);
-    return m_instance;
-}
 
 }
 

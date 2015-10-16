@@ -188,21 +188,15 @@ void Scheduler::schedule_waiting_task()
     }
 }
 
-void Scheduler::wakeup_bg_runner() noexcept
-{
-    LOG << "Scheduler::wakeup_bg_runner: wakeing up BgRunner\n";
-    BgRunner::instance().wake_up_all(); // FIXME: wake up only one Core
-}
-
 Task* Scheduler::get_next_from_queue() noexcept
 {
     bool have_more_tasks = false;
-    Task* task = running_queue_.get_task(have_more_tasks);
+    Task* task = instance().running_queue_.get_task(have_more_tasks);
     LOG << "Scheduler::get_next_from_queue: got task " << task << " from running queue\n";
     if( task != nullptr
             && have_more_tasks)
     {
-        wakeup_bg_runner();
+        instance().bg_runner_.notify();
     }
     return task;
 }
@@ -221,9 +215,9 @@ Task* Scheduler::get_next_from_native()
 void Scheduler::enqueue_task(Task *task) noexcept
 {
     assert(task != nullptr);
-    running_queue_.put_task(task);
+    instance().running_queue_.put_task(task);
     LOG << "Scheduler::enqueue_task: task " << task << " stored in running task queue\n";
-    wakeup_bg_runner();
+    instance().bg_runner_.notify();
 }
 
 Task *Scheduler::get_next_task()

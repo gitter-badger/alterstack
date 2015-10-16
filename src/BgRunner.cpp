@@ -46,7 +46,7 @@ BgRunner::~BgRunner()
     LOG << "BgRunner::~BgRunner()\n";
 }
 
-void BgRunner::wake_up_all()
+void BgRunner::notify_all()
 {
     if( CpuCore::sleep_count() )
     {

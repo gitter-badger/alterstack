@@ -85,7 +85,6 @@ BgRunner (в работе)| running queue        |переключаемся н�
 3. class Future to wait for data ready
 4. Unit Tests
 5. Asyncronous Networking (DNS resolver, sockets)
-8. Describe architecture in Doxygen Main Page
 
 #License
 
