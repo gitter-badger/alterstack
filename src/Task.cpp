@@ -92,7 +92,7 @@ void Task::wait()
         return;
     }
     LOG << "Task::wait: running Awaitable::wait()\n";
-    Awaitable::wait();
+    awaitable_.wait();
 }
 
 void Task::_run_wrapper(intptr_t task_ptr) noexcept

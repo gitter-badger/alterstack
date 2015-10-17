@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <memory>
 
+#include "Awaitable.hpp"
 #include "TaskState.hpp"
 #include "Scheduler.hpp"
 #include "Stack.hpp"
@@ -40,7 +41,7 @@ namespace alterstack
  * Details see on Main Page in section @ref task_section.
  *
  */
-class Task : public Awaitable
+class Task
 {
 public:
     /**
@@ -84,6 +85,13 @@ public:
      * If this already finished return immediately
      */
     void wait();
+    /**
+     * @brief release all Tasks waiting this.
+     *
+     * release() is threadsafe
+     */
+    void release();
+
 
 private:
     friend class Scheduler;
@@ -101,6 +109,7 @@ private:
     static void _run_wrapper(intptr_t task_ptr) noexcept;
     bool is_native() noexcept;
 
+    Awaitable  awaitable_;
     Task*      next_ = nullptr;
     Context    m_context;
 
@@ -110,6 +119,11 @@ private:
     std::unique_ptr<Stack>  m_stack;
     ::std::function<void()> m_runnable;
 };
+
+inline void Task::release()
+{
+    awaitable_.release();
+}
 
 inline bool Task::is_native() noexcept
 {
