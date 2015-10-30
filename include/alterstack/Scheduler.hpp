@@ -99,11 +99,6 @@ public:
      * @param old_task task to store
      */
     static void post_switch_fixup(Task *old_task);
-    /**
-     * @brief get Scheduler instance singleton
-     * @return Scheduler& singleton instance
-     */
-    static Scheduler& instance();
 
 private:
     friend class Task;
@@ -111,6 +106,14 @@ private:
     friend class BgRunner;
     friend class CpuCore;
 
+    bool do_schedule(bool old_stay_running);
+    void do_schedule_new_task(Task *task);
+    void do_schedule_waiting_task();
+    /**
+     * @brief get Scheduler instance singleton
+     * @return Scheduler& singleton instance
+     */
+    static Scheduler& instance();
     /**
      * @brief get Task* from running queue
      * @return Task* or nullptr if queue is empty

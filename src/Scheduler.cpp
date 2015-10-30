@@ -35,6 +35,11 @@ namespace ctx = ::boost::context;
 
 bool Scheduler::schedule(bool old_stay_running)
 {
+    return instance().do_schedule(old_stay_running);
+}
+
+bool Scheduler::do_schedule(bool old_stay_running)
+{
     LOG << "Scheduler::schedule\n";
 
     Task* next_task = get_next_task();
@@ -47,8 +52,12 @@ bool Scheduler::schedule(bool old_stay_running)
               ,old_stay_running ? TaskState::Running : TaskState::Waiting);
     return true;
 }
-
 void Scheduler::schedule_new_task( Task* task )
+{
+    instance().do_schedule_new_task(task);
+}
+
+void Scheduler::do_schedule_new_task( Task* task )
 {
     task->set_function(); // FIXME: this hack will be fixed with extending runnable types
     switch_to(task);
@@ -156,8 +165,12 @@ void Scheduler::create_native_task_for_current_thread()
         LOG << "make_native_task: created native task " << m_thread_info->native_task.get() << "\n";
     }
 }
-
 void Scheduler::schedule_waiting_task()
+{
+    instance().do_schedule_waiting_task();
+}
+
+void Scheduler::do_schedule_waiting_task()
 {
     /* At this point current task inserted in wait list and MUST not be inserted in
      * running list and current_task->m_context == nullptr to protect scheduling current task
