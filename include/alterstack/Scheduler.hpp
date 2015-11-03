@@ -118,7 +118,7 @@ private:
      * @brief get Task* from running queue
      * @return Task* or nullptr if queue is empty
      */
-    static Task* get_next_from_queue() noexcept;
+    Task* get_next_from_queue() noexcept;
     /**
      * @brief get Native Task* if it is running or nullptr
      * @return Native Task* or nullptr
@@ -154,11 +154,6 @@ private:
     BgRunner bg_runner_;
     RunningQueue<Task> running_queue_;
 };
-
-inline Scheduler::Scheduler()
-    :bg_runner_(1)
-    ,running_queue_()
-{}
 
 inline Scheduler& Scheduler::instance()
 {

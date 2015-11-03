@@ -18,8 +18,6 @@
  */
 
 #include "alterstack/Scheduler.hpp"
-#include "alterstack/BgRunner.hpp"
-
 
 namespace alterstack
 {

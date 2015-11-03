@@ -19,19 +19,18 @@
 
 #pragma once
 
-#include "CpuCore.hpp"
-
 #include <atomic>
 #include <deque>
 #include <memory>
 #include <thread>
 
+#include "CpuCore.hpp"
+
 namespace alterstack
 {
+class Scheduler;
 /**
  * @brief Creates pool of threads which runs Task in background
- *
- * Number of threads to create defined in constructor and can't change in runtime.
  */
 class BgRunner
 {
@@ -39,10 +38,26 @@ public:
     BgRunner() = delete;
     /**
      * @brief thread pool constructor
-     * @param running number of threads to start
+     * @param scheduler Scheduler reference
+     * @param min_spare number of threads to start
+     * @param max_running max CpuCore to use
      */
-    BgRunner(uint32_t running=1);
+    explicit BgRunner(
+            Scheduler* scheduler
+            ,uint32_t min_spare = 1
+            ,uint32_t max_running = std::thread::hardware_concurrency());
     ~BgRunner();
+
+    /**
+     * @brief set spare CpuCore count
+     * @param cores count
+     */
+    void set_min_cores(uint32_t cores); // not implemented
+    /**
+     * @brief set max CpuCore limit
+     * @param cores max limit
+     */
+    void set_max_cores(uint32_t cores); // not implemented
 
 private:
     friend class CpuCore;
@@ -58,6 +73,9 @@ private:
      */
     void notify();
 
+    Scheduler* scheduler_;   //!< reference to Scheduler
+    uint32_t   min_spare_;   //!< min spare threads
+    uint32_t   max_running_; //!< max CpuCore threads limit
     ::std::deque<std::unique_ptr<CpuCore>> m_cpu_core_list;
 };
 

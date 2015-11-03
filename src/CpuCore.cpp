@@ -45,11 +45,11 @@ void CpuCore::thread_function()
 
     while( true )
     {
-        Task* next_task = Scheduler::get_next_from_queue();
+        Task* next_task = scheduler_->get_next_from_queue();
         if( next_task != nullptr )
         {
             LOG << "CpuCore::thread_function: got new task, switching on " << next_task << "\n";
-            Scheduler::switch_to(next_task);
+            scheduler_->switch_to(next_task);
         }
 
         ::std::unique_lock<std::mutex> task_ready_guard(m_task_avalable_mutex);
@@ -97,8 +97,9 @@ void CpuCore::wait_on_cv(::std::unique_lock<std::mutex>& task_ready_guard)
 
 }
 
-CpuCore::CpuCore()
-    :m_stop_requested(false)
+CpuCore::CpuCore(Scheduler *scheduler)
+    :scheduler_(scheduler)
+    ,m_stop_requested(false)
 {
     LOG << "CpuCore::CpuCore\n";
     m_thread_started.store(false, ::std::memory_order_relaxed);

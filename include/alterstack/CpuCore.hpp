@@ -27,6 +27,7 @@
 namespace alterstack
 {
 class BgRunner;
+class Scheduler;
 /**
  * @brief Single Task background runner thread.
  */
@@ -37,11 +38,12 @@ public:
     CpuCore(CpuCore&&) = delete;
     CpuCore& operator=(const CpuCore&) = delete;
     CpuCore& operator=(CpuCore&&) = delete;
+    CpuCore() = delete;
     /**
      * @brief start one OS thread
      * @param bg_runner reference to BgRunner
      */
-    CpuCore();
+    explicit CpuCore(Scheduler* scheduler);
     /**
      * @brief destructor stops OS thread, return when it's stopped
      */
@@ -76,6 +78,7 @@ private:
     bool is_stop_requested_no_lock();
     void wait_on_cv(::std::unique_lock<std::mutex> &task_ready_guard);
 
+    Scheduler*        scheduler_;       //!< Scheduler reference
     std::thread       m_thread;         //!< OS thread
     std::atomic<bool> m_thread_started; //!< true if thread_function started
     std::atomic<bool> m_thread_stopped; //!< true if thread_function stopped

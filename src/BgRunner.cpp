@@ -28,12 +28,18 @@
 namespace alterstack
 {
 
-BgRunner::BgRunner(uint32_t running)
+BgRunner::BgRunner(
+        Scheduler* scheduler
+        ,uint32_t min_spare
+        ,uint32_t max_running)
+    :scheduler_(scheduler)
+    ,min_spare_(min_spare)
+    ,max_running_(max_running)
 {
     LOG << "BgRunner::BgRunner()\n";
-    for(uint32_t i = 0; i < running; ++i)
+    for(uint32_t i = 0; i < min_spare; ++i)
     {
-        m_cpu_core_list.push_back(::std::make_unique<CpuCore>());
+        m_cpu_core_list.push_back(::std::make_unique<CpuCore>(scheduler));
     }
 }
 

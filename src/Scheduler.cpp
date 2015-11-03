@@ -33,6 +33,11 @@ namespace alterstack
 
 namespace ctx = ::boost::context;
 
+Scheduler::Scheduler()
+    :bg_runner_(this)
+    ,running_queue_()
+{}
+
 bool Scheduler::schedule(bool old_stay_running)
 {
     return instance().do_schedule(old_stay_running);
@@ -240,7 +245,7 @@ Task *Scheduler::get_next_task()
     if( current->is_native() ) // Native thread in Native code calls yield()
     {
         LOG << "Scheduler::get_next_task: in Native\n";
-        return get_next_from_queue();
+        return instance().get_next_from_queue();
     }
     else
     {
@@ -252,12 +257,12 @@ Task *Scheduler::get_next_task()
             {
                 return next_task;
             }
-            return get_next_from_queue();
+            return instance().get_next_from_queue();
         }
         else // BgRunner on Alternative stack
         {
             LOG << "Scheduler::_get_next_task: in BgRunner\n";
-            return get_next_from_queue();
+            return instance().get_next_from_queue();
         }
     }
     return nullptr;
