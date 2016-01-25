@@ -1,5 +1,7 @@
 # alterstack
 
+[![Join the chat at https://gitter.im/masterspline/alterstack](https://badges.gitter.im/masterspline/alterstack.svg)](https://gitter.im/masterspline/alterstack?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Проект задуман для создания удобного инстумента для работы с корутинами в C++. Каждая созданная сопрограмма имеет свой стек. В проекте используется boost::context, а именно самая низкоуровневая часть от него, которая непосредственно занимается созданием контекста (нового стека) и переключением между стеками (boost::context::make_fcontext и jump_fcontext). Проект изначально нацелен на получение наилучшего быстродействия при создании и переключении контестов (все остальное делает код пользователя).
 
 # Клонирование и создание проекта
